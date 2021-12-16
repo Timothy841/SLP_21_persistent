@@ -59,6 +59,6 @@ int client_handshake(int *to_server) {
   strcat(line, "2");
   write(*to_server, line, 100);
   printf("Connection established\n");
-  printf("%d %d\n", WKP, pipe);
+  printf("%d %d\n", *to_server, from_server);
   return from_server;
 }
