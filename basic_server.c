@@ -22,6 +22,9 @@ int main() {
 				break;
 			}
 			read(from_client, line, 100);
+			if (strcmp(line, "exit1") == 0){
+				break;
+			}
 			change(line);
 			write(to_client, line, 100);
 		}

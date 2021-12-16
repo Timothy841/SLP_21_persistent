@@ -11,24 +11,22 @@
 int server_handshake(int *to_client) {
   char line[100];
   char pipe[100];
+  mkfifo(WKP, 0644);
   int from_client = open(WKP, O_RDONLY);
-  if (from_client == -1){
-	mkfifo(WKP, 0644);
-	from_client = open(WKP, O_RDONLY);
-  }
   read(from_client, line, 100);
+  remove(WKP);
   sscanf(line, "%s\n", line);
   strcpy(pipe, line);
-  remove(WKP);
+  mkfifo(line, 0644);
   *to_client = open(line, O_WRONLY);
-  if (*to_client == -1){
-  	mkfifo(line, 0644);
-  	*to_client = open(line, O_WRONLY);
-  }
   strcat(line, "1");
   write(*to_client, line, 100);
   remove(pipe);
   read(from_client, line, 100);
+  if (strcmp(line, strcat(pipe, "12"))){
+    printf("Connection unsecure.\n");
+    exit(0);
+  }
   sscanf(line, "%s\n", line);
   printf("Connection established\n");
   return from_client;
@@ -47,21 +45,20 @@ int client_handshake(int *to_server) {
   snprintf(line, 100, "%d", getpid());
   char pipe[100];
   strcpy(pipe, line);
+  mkfifo(WKP, 0644);
   *to_server = open(WKP, O_WRONLY);
-  if (*to_server == -1){
-    mkfifo(WKP, 0644);
-    *to_server = open(WKP, O_WRONLY);
-  }
   write(*to_server, line, 100);
+  mkfifo(pipe, 0644);
   int from_server = open(pipe, O_RDONLY);
-  if (from_server == -1){
-	   mkfifo(pipe, 0644);
-     from_server = open(pipe, O_RDONLY);
-  }
   read(from_server, line, 100);
   sscanf(line, "%s\n", line);
+  if (strcmp(line, strcat(pipe, "1"))){
+    printf("Connection unsecure.\n");
+    exit(0);
+  }
   strcat(line, "2");
   write(*to_server, line, 100);
   printf("Connection established\n");
+  printf("%d %d\n", WKP, pipe);
   return from_server;
 }
